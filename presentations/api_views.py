@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-
+from .encoders import PresentationDetailEncoder, PresentationListEncoder
 from .models import Presentation
 
 
@@ -25,15 +25,10 @@ def api_list_presentations(request, conference_id):
         ]
     }
     """
-    presentations = [
-        {
-            "title": p.title,
-            "status": p.status.name,
-            "href": p.get_api_url(),
-        }
-        for p in Presentation.objects.filter(conference=conference_id)
-    ]
-    return JsonResponse({"presentations": presentations})
+    presentations = Presentation.objects.filter(conference=conference_id)
+    return JsonResponse(
+        presentations, encoder=PresentationListEncoder, safe=False
+    )
 
 
 def api_show_presentation(request, id):
@@ -61,4 +56,9 @@ def api_show_presentation(request, id):
         }
     }
     """
-    return JsonResponse({})
+    presentation = Presentation.objects.get(id=id)
+    return JsonResponse(
+        presentation,
+        encoder=PresentationDetailEncoder,
+        safe=False,
+    )

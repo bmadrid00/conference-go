@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-
+from .encoders import AttendeeListEncoder, AttendeeDetailEncoder
 from .models import Attendee
 
 
@@ -23,7 +23,8 @@ def api_list_attendees(request, conference_id):
         ]
     }
     """
-    return JsonResponse({})
+    attendees = Attendee.objects.filter(conference=conference_id)
+    return JsonResponse(attendees, encoder=AttendeeListEncoder, safe=False)
 
 
 def api_show_attendee(request, id):
@@ -46,4 +47,5 @@ def api_show_attendee(request, id):
         }
     }
     """
-    return JsonResponse({})
+    attendee = Attendee.objects.get(id=id)
+    return JsonResponse(attendee, encoder=AttendeeDetailEncoder, safe=False)
