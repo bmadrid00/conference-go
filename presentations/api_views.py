@@ -1,8 +1,12 @@
 from django.http import JsonResponse
 from .encoders import PresentationDetailEncoder, PresentationListEncoder
 from .models import Presentation
+from django.views.decorators.http import require_http_methods
+import json
+from events.models import Conference
 
 
+@require_http_methods(["GET", "POST"])
 def api_list_presentations(request, conference_id):
     """
     Lists the presentation titles and the link to the
@@ -25,12 +29,25 @@ def api_list_presentations(request, conference_id):
         ]
     }
     """
-    presentations = Presentation.objects.filter(conference=conference_id)
-    return JsonResponse(
-        presentations, encoder=PresentationListEncoder, safe=False
-    )
+    if request.method == "GET":
+        presentations = Presentation.objects.filter(conference=conference_id)
+        return JsonResponse(
+            presentations,
+            encoder=PresentationListEncoder,
+            safe=False,
+        )
+    else:
+        content = json.loads(request.body)
+        content["conference"] = Conference.objects.get(id=conference_id)
+        presentation = Presentation.create(**content)
+        return JsonResponse(
+            presentation,
+            encoder=PresentationDetailEncoder,
+            safe=False,
+        )
 
 
+@require_http_methods(["PUT", "GET", "DELETE"])
 def api_show_presentation(request, id):
     """
     Returns the details for the Presentation model specified
@@ -56,9 +73,23 @@ def api_show_presentation(request, id):
         }
     }
     """
-    presentation = Presentation.objects.get(id=id)
-    return JsonResponse(
-        presentation,
-        encoder=PresentationDetailEncoder,
-        safe=False,
-    )
+    if request.method == "GET":
+        presentation = Presentation.objects.get(id=id)
+        return JsonResponse(
+            presentation,
+            encoder=PresentationDetailEncoder,
+            safe=False,
+        )
+    elif request.method == "DELETE":
+        count, _ = Presentation.objects.filter(id=id).delete()
+        return JsonResponse({"deleted": count > 0})
+    else:
+        content = json.loads(request.body)
+
+        Presentation.objects.filter(id=id).update(**content)
+        presentation = Presentation.objects.get(id=id)
+        return JsonResponse(
+            presentation,
+            encoder=PresentationDetailEncoder,
+            safe=False,
+        )

@@ -30,6 +30,7 @@ class Location(models.Model):
     name = models.CharField(max_length=200)
     city = models.CharField(max_length=200)
     room_count = models.PositiveSmallIntegerField()
+    picture_url = models.CharField(max_length=200, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
