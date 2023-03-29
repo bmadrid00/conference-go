@@ -1,0 +1,29 @@
+#base image for python 3 latest version
+FROM python:3
+
+
+RUN apt-get update
+RUN apt-get install cron -y
+
+#environmental variable so that python will print things immediately
+ENV PYHTONUNBUFFERED 1
+
+
+#names working directory in docker container /app
+WORKDIR /app
+
+
+#only copy requirements as a volume will be setup from present working directory to /app
+COPY requirements.txt requirements.txt
+
+
+#download all requirements
+RUN pip install -r requirements.txt
+
+
+RUN touch /var/spool/cron/crontabs/root
+RUN crontab -l
+
+
+#run server with python manage.py --- used for development
+CMD python manage.py crontab add && service cron start && python manage.py runserver '0.0.0.0:8001'
